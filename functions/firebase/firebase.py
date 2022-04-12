@@ -60,7 +60,7 @@ def SendDepositNotification(amount, notificationTokens, notifications, userID):
             message = messaging.Message(
                 notification=messaging.Notification(
                     title='Deposit',
-                    body='Incoming deposit of R{}'.format(amount)
+                    body='Incoming deposit of R{:.2f}'.format(amount)
                 ),
                 android=messaging.AndroidConfig(
                     priority='high',
