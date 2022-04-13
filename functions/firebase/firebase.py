@@ -81,3 +81,27 @@ def SendDepositNotification(amount, notificationTokens, notifications, userID):
         except Exception:
 
             print("Token not found")
+
+
+def GetWithdrawals():
+
+    docs = db.collection(u'withdrawals').where(
+        u'processed', u'==', False).get()
+
+    withdrawalData = []
+    withdrawalIDs = []
+    for doc in docs:
+        withdrawalData.append(doc.to_dict())
+        withdrawalIDs.append(doc.id)
+
+    return withdrawalData, withdrawalIDs
+
+
+def GetUserDetails(userID):
+    data = db.collection(u'users').document(userID).get()
+    return data.to_dict()
+
+
+def MarkWithdrawalAsProcessed(withdrawalID):
+    db.collection(u'withdrawals').document(
+        withdrawalID).update({u'processed': True})
