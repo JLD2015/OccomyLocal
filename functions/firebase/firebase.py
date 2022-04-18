@@ -105,3 +105,19 @@ def GetUserDetails(userID):
 def MarkWithdrawalAsProcessed(withdrawalID):
     db.collection(u'withdrawals').document(
         withdrawalID).update({u'processed': True})
+
+
+def ProcessConversionRequests():
+    docs = db.collection(u'conversions').where(
+        u'processed', u'==', False).get()
+
+    for doc in docs:
+        data = doc.to_dict()
+
+        # Update the user to customer
+        db.collection(u'users').document(
+            data["userID"]).update({u'isMerchant': False})
+
+        # Mark the conversion request as processed
+        db.collection(u'conversions').document(
+            doc.id).update({u'processed': True})

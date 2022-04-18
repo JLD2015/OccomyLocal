@@ -1,4 +1,5 @@
 # <========== Imports ==========>
+import datetime
 from datetime import date
 from datetime import timedelta
 import glob
@@ -359,3 +360,9 @@ if __name__ == "__main__":
 
     # Delete the statement
     os.remove(latestFile)
+
+    # <========== At the end of the month process conversion requests ==========>
+    currentDate = datetime.datetime.today().day
+
+    if (currentDate == 18):
+        Firebase.ProcessConversionRequests()
