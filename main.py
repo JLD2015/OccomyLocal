@@ -322,6 +322,9 @@ if __name__ == "__main__":
     element = driver.find_element(
         by=By.XPATH, value="//li[6]/i")
     element.click()
+
+    time.sleep(5)
+
     driver.close()
 
     # <========== Mark withdrawals as processed ==========>
@@ -350,6 +353,9 @@ if __name__ == "__main__":
     dateYesterday = date.today() - timedelta(days=1)
     dirtyData = dirtyData.loc[dirtyData["Date"]
                               == dateYesterday.strftime("%Y-%m-%d")]
+
+    dirtyData["Reference"] = dirtyData["Reference"].str.strip()
+    dirtyData = dirtyData[dirtyData["Reference"].str.len() == 8]
     cleanData = dirtyData
 
     print(cleanData)
@@ -364,5 +370,5 @@ if __name__ == "__main__":
     # <========== At the end of the month process conversion requests ==========>
     currentDate = datetime.datetime.today().day
 
-    if (currentDate == 18):
+    if (currentDate == 1):
         Firebase.ProcessConversionRequests()
