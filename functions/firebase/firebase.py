@@ -1,9 +1,11 @@
 # <========== Import Libraries ==========>
 import datetime
+from email import feedparser
 import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import firestore
 from firebase_admin import messaging
+from tqdm import tqdm
 
 # <========== Initialize firebase ==========>
 cred = credentials.Certificate('functions/firebase/firebaseKey.json')
@@ -74,9 +76,7 @@ def SendDepositNotification(amount, notificationTokens, notifications, userID):
                 ),
                 token=token)
 
-            response = messaging.send(message)
-
-            print('Successfully sent message:', response)
+            messaging.send(message)
 
         except Exception:
 
@@ -108,16 +108,144 @@ def MarkWithdrawalAsProcessed(withdrawalID):
 
 
 def ProcessConversionRequests():
-    docs = db.collection(u'conversions').where(
-        u'processed', u'==', False).get()
+
+    currentDate = datetime.datetime.today().day
+
+    if (currentDate == 1):
+
+        print("<========== Processing conversion requests ==========>\n")
+
+        docs = db.collection(u'conversions').where(
+            u'processed', u'==', False).get()
+
+        for doc in docs:
+            data = doc.to_dict()
+
+            # Update the user to customer
+            db.collection(u'users').document(
+                data["userID"]).update({u'isMerchant': False})
+
+            # Mark the conversion request as processed
+            db.collection(u'conversions').document(
+                doc.id).update({u'processed': True})
+
+
+# <========== Used for cleaning uncomplete transactions ==========>
+def cleanTransactions():
+    docs = db.collection(u'transactions').where(
+        u'status', u'==', u"pending").get()
+
+    if len(docs) > 0:
+
+        print("<========== Cleaning transactions ==========>\n")
+
+        removeIDs = []
+        for doc in docs:
+            removeIDs.append(doc.to_dict()["transactionID"])
+            db.collection(u'transactions').document(doc.id).delete()
+
+        db.collection(u'transactions').document(u'transactionIDs').update(
+            {u'transactionIDs': firestore.ArrayRemove(removeIDs)})
+
+    else:
+        print("<========== No transactions to clean ==========>\n")
+
+
+# <========== Used for checking balance of system ==========>
+def balanceSystem(bankTotal):
+
+    totalBalance = 0
+    totalFees = 0
+    totalCashBack = 0
+
+    docs = db.collection(u'users').get()
 
     for doc in docs:
-        data = doc.to_dict()
+        if doc.id != "apiKeys" and doc.id != "depositIDs":
+            data = doc.to_dict()
+            totalBalance += data["balance"]
+            totalFees += data["fees"]
+            totalCashBack += data["cashBack"]
 
-        # Update the user to customer
-        db.collection(u'users').document(
-            data["userID"]).update({u'isMerchant': False})
+    requiredTotal = totalBalance + totalFees
 
-        # Mark the conversion request as processed
-        db.collection(u'conversions').document(
-            doc.id).update({u'processed': True})
+    print("<========== Balancing ==========>")
+    print(f"\nTotal Balance: {round(totalBalance, 2)}")
+    print(f"Total Fees: {round(totalFees, 2)}")
+    print(f"Total Cashback: {round(totalCashBack, 2)} \n")
+    print(f"Required Total: {round(requiredTotal, 2)}")
+    print(f"Bank Total: {round(bankTotal, 2)} \n")
+
+    if bankTotal >= requiredTotal:
+        print("SYSTEM IN BALANCE \n")
+    else:
+        print("EMERGENCY: SYSTEM OUT OF BALANCE \n")
+
+    db.collection(u"accounting").document(u"totals").set({
+        datetime.datetime.now().strftime("%Y/%m/%d"): {
+            u'totalBalance': round(totalBalance, 2),
+            u'totalFees': round(totalFees, 2),
+            u'totalCashBack': round(totalCashBack, 2),
+            u'requiredTotal': round(requiredTotal, 2),
+            u'bankTotal': round(bankTotal, 2)
+        }
+    })
+
+    # We want to reset fees and cashback on the first of every month
+    currentDate = datetime.datetime.today().day
+
+    if (currentDate == 1):
+
+        print("<========== Resetting fees and cashback ==========>\n")
+
+        # Record my revenue for the month (totalFees - totalCashBack)
+        db.collection(u"accounting").document(u"revenue").set({
+            datetime.datetime.now().strftime("%Y/%m/%d"): {
+                u'revenue': round(totalFees - totalCashBack, 2)
+            }
+        })
+
+        # Reset fees and cash back for all users
+        for doc in tqdm(docs):
+
+            if doc.id != "apiKeys" and doc.id != "depositIDs":
+
+                data = doc.to_dict()
+
+                fees = data["fees"]
+                cashBack = data["cashBack"]
+                notificationTokens = data["notificationTokens"]
+
+                # Notify user of cash back and fees for month
+                for token in notificationTokens:
+
+                    try:
+
+                        message = messaging.Message(
+                            notification=messaging.Notification(
+                                title='Occomy',
+                                body=f"You made R{round(cashBack, 2)} in cashback and paid R{round(fees, 2)} in fees last month."
+                            ),
+                            android=messaging.AndroidConfig(
+                                priority='high',
+                                notification=messaging.AndroidNotification(
+                                    sound='default'),
+                            ),
+                            apns=messaging.APNSConfig(
+                                payload=messaging.APNSPayload(
+                                    aps=messaging.Aps(sound='default'),
+                                ),
+                            ),
+                            token=token)
+
+                        messaging.send(message)
+
+                    # Delete dead notification tokens
+                    except Exception:
+
+                        db.collection(u'users').document(doc.id).update(
+                            {u'notificationTokens': firestore.ArrayRemove([token])})
+
+                # Reset the fees, cashback and totalTransactions
+                db.collection(u'users').document(doc.id).update(
+                    {u'fees': 0, u'cashBack': 0, u'totalTransactions': 0})
