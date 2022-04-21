@@ -354,6 +354,13 @@ def mercantileAPI(downloadsDirectory):
     dirtyData = dirtyData.loc[dirtyData["Date"]
                               == dateYesterday.strftime("%Y-%m-%d")]
 
+    # Some banks have odd references
+    for index, row in dirtyData.iterrows():
+        if "ABSA BANK" in row["Reference"]:
+            dirtyString = row['Reference']
+            cleanString = dirtyString.replace('ABSA BANK', '')
+            dirtyData.loc[index, 'Reference'] = cleanString
+
     dirtyData["Reference"] = dirtyData["Reference"].str.strip()
     dirtyData = dirtyData[dirtyData["Reference"].str.len() == 8]
     cleanData = dirtyData
