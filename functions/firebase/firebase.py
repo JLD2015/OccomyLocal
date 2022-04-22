@@ -199,9 +199,12 @@ def balanceSystem(bankTotal):
         print("<========== Resetting fees and cashback ==========>\n")
 
         # Record my revenue for the month (totalFees - totalCashBack)
+        revenue = (totalFees - totalCashBack)*(100/115)
+        vat = (totalFees - totalCashBack)-revenue
         db.collection(u"accounting").document(u"revenue").set({
             datetime.datetime.now().strftime("%Y/%m/%d"): {
-                u'revenue': round(totalFees - totalCashBack, 2)
+                u'revenue': revenue,
+                u'VAT': vat
             }
         })
 
@@ -249,3 +252,12 @@ def balanceSystem(bankTotal):
                 # Reset the fees, cashback and totalTransactions
                 db.collection(u'users').document(doc.id).update(
                     {u'fees': 0, u'cashBack': 0, u'totalTransactions': 0})
+
+
+# <========== Used for getting a list of all of the deposit IDs we have ==========>
+def getAllDepositIDs():
+
+    doc = db.collection(u'users').document("depositIDs").get()
+    data = doc.to_dict()["depositIDs"]
+
+    return data

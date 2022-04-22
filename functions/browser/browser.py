@@ -354,15 +354,14 @@ def mercantileAPI(downloadsDirectory):
     dirtyData = dirtyData.loc[dirtyData["Date"]
                               == dateYesterday.strftime("%Y-%m-%d")]
 
-    # Some banks have odd references
-    for index, row in dirtyData.iterrows():
-        if "ABSA BANK" in row["Reference"]:
-            dirtyString = row['Reference']
-            cleanString = dirtyString.replace('ABSA BANK', '')
-            dirtyData.loc[index, 'Reference'] = cleanString
+    # Look for references which have a valid ID as a substring
+    allDepositIDs = Firebase.getAllDepositIDs()
+    for depositID in allDepositIDs:
+        for index, row in dirtyData.iterrows():
+            if depositID in row["Reference"]:
+                dirtyData.loc[index, 'Reference'] = depositID
 
-    dirtyData["Reference"] = dirtyData["Reference"].str.strip()
-    dirtyData = dirtyData[dirtyData["Reference"].str.len() == 8]
+    # The data is now clean
     cleanData = dirtyData
 
     print(cleanData)
