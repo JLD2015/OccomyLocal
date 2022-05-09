@@ -1,0 +1,19 @@
+Balance brought forward:,0.00
+
+Account,Date,Description,Reference,Amount,Fees,Balance,
+1051074436,28/03/2022,"Retail Cr Transfer",J DALTON                                          ,1000.00,,1000.00
+1051074436,30/03/2022,"Retail Cr Transfer",WUR3JZGN                                          ,50.00,,1050.00
+1051074436,31/03/2022,"Month S/Fee",                                                  ,,-65.00,985.00
+1051074436,13/04/2022,"STP/Batch Payment",Wit: WUR3JZGN                                     ,-10.00,-4.99,970.01
+1051074436,13/04/2022,"STP/Batch Payment",Wit: WUR3JZGN                                     ,-3.85,-4.99,961.17
+1051074436,13/04/2022,"STP/Batch Payment",Wit: WUR3JZGN                                     ,-5.00,-4.99,951.18
+1051074436,18/04/2022,"Retail Cr Transfer",RMYT4OIG                                          ,500.00,,1451.18
+1051074436,19/04/2022,"Cr Trf",no such account Occomy PTY LTD From 2206524109    ,3.85,,1455.03
+1051074436,19/04/2022,"Cr Trf",no such account Occomy PTY LTD From 2206524109    ,10.00,,1465.03
+1051074436,19/04/2022,"Cr Trf",no such account Occomy PTY LTD From 2206524109    ,5.00,,1470.03
+1051074436,19/04/2022,"Cr Trf",account frozen Salary From 2206524109             ,3173.25,,4643.28
+1051074436,19/04/2022,"Retail Cr Transfer",ACUE0K2Y                                          ,100.00,,4743.28
+1051074436,20/04/2022,"Inward EFT Credit",ABSA BANK 047RQFQY                                ,200.00,,4943.28
+1051074436,30/04/2022,"Month S/Fee",                                                  ,,-65.00,4878.28
+1051074436,05/05/2022,"Sundry Debit",MIPOSTED ON THE 19/04/2022                        ,-3173.25,,1705.03
+Total:,,,,1850.0,-144.96999999999997,1705.03
